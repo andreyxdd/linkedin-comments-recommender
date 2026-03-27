@@ -135,10 +135,10 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
         <div className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">
           Step 1
         </div>
-        <CardTitle className="text-2xl">Shape your LinkedIn angle</CardTitle>
+        <CardTitle className="text-2xl">Set your LinkedIn angle</CardTitle>
         <CardDescription>
-          Pick who you are, which conversations matter, and how the comments
-          should sound. Custom overrides stay local to this session.
+          Pick your persona, topic, keywords, and tone. Custom values stay in
+          this session.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -223,7 +223,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
 
           <div className="space-y-3">
             <label htmlFor="keyword-input" className="text-sm font-medium">
-              Include-only keywords
+              Keywords (include only)
             </label>
             <div className="flex gap-2">
               <Input
@@ -256,8 +256,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Include-only keywords keep the discovery focused instead of turning
-              into a vague prompt soup.
+              Keep keywords specific so discovery stays focused.
             </p>
           </div>
 
@@ -298,9 +297,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
           </div>
 
           <Button type="submit" className="h-11 w-full" disabled={!canSubmit}>
-            {isLoading
-              ? "Preparing suggestions..."
-              : "Find Ranked LinkedIn Opportunities"}
+            {isLoading ? "Preparing..." : "Find Opportunities"}
           </Button>
         </form>
       </CardContent>

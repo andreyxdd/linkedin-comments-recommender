@@ -17,16 +17,16 @@ interface StreamDisplayProps {
 
 const milestones = [
   {
-    title: "Discover relevant posts",
-    detail: "Search public LinkedIn conversations worth a closer look.",
+    title: "Find relevant posts",
+    detail: "Scan public LinkedIn conversations worth attention.",
   },
   {
-    title: "Score the shortlist",
-    detail: "Rank the strongest matches before drafting comments.",
+    title: "Rank the shortlist",
+    detail: "Score the strongest matches before drafting comments.",
   },
   {
-    title: "Prepare final suggestions",
-    detail: "Package the top opportunities with two ready-to-use replies each.",
+    title: "Draft comments",
+    detail: "Prepare two ready replies for each top opportunity.",
   },
 ] as const;
 
@@ -39,11 +39,11 @@ const milestoneIndexByNode: Record<string, number> = {
 };
 
 const statusLabelByNode: Record<string, string> = {
-  input: "Getting discovery ready",
-  discovery: "Discovering relevant LinkedIn posts",
-  ranking: "Scoring the strongest matches",
-  comment_generation: "Preparing your final suggestions",
-  complete: "Final suggestions are ready to review.",
+  input: "Preparing discovery",
+  discovery: "Finding relevant LinkedIn posts",
+  ranking: "Ranking top matches",
+  comment_generation: "Drafting final suggestions",
+  complete: "Suggestions ready to review.",
 };
 
 export function StreamDisplay({ events, isLoading }: StreamDisplayProps) {
@@ -67,13 +67,13 @@ export function StreamDisplay({ events, isLoading }: StreamDisplayProps) {
           Step 2
         </div>
         <CardTitle className="flex items-center gap-2 text-2xl">
-          Watch the run move
+          Track the run
           {isLoading && (
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
           )}
         </CardTitle>
         <CardDescription>
-          Concise milestones only. Internal noise stays out of the way.
+          Milestones only. Internal noise stays out.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -112,7 +112,7 @@ export function StreamDisplay({ events, isLoading }: StreamDisplayProps) {
             className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground"
           >
             {latestMessage ||
-              "Waiting for a run. Once submitted, milestone updates will land here."}
+              "Waiting for a run. Milestone updates appear here."}
           </div>
         </div>
       </CardContent>

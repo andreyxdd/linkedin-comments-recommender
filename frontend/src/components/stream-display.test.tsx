@@ -24,9 +24,9 @@ describe("StreamDisplay", () => {
       />,
     );
 
-    expect(screen.getByText("Discover relevant posts")).toBeInTheDocument();
+    expect(screen.getByText("Find relevant posts")).toBeInTheDocument();
     expect(screen.queryByText("Lock in the request")).not.toBeInTheDocument();
-    expect(screen.getByText("Getting discovery ready")).toBeInTheDocument();
+    expect(screen.getByText("Preparing discovery")).toBeInTheDocument();
   });
 
   it("maps backend ranking updates onto the second visible milestone", () => {
@@ -47,8 +47,8 @@ describe("StreamDisplay", () => {
       />,
     );
 
-    expect(screen.getByText("Score the shortlist")).toBeInTheDocument();
-    expect(screen.getByText("Scoring the strongest matches")).toBeInTheDocument();
+    expect(screen.getByText("Rank the shortlist")).toBeInTheDocument();
+    expect(screen.getByText("Ranking top matches")).toBeInTheDocument();
     expect(screen.getAllByText("Done")).toHaveLength(1);
     expect(screen.getByText("Now")).toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe("StreamDisplay", () => {
     );
 
     expect(
-      screen.getByText("Final suggestions are ready to review."),
+      screen.getByText("Suggestions ready to review."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Suggestions ready.")).not.toBeInTheDocument();
     expect(screen.getAllByText("Done")).toHaveLength(3);

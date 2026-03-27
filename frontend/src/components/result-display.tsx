@@ -20,8 +20,8 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
-        <Badge variant="outline">3 ranked post opportunities</Badge>
-        {result.partial && <Badge variant="secondary">Partial result</Badge>}
+        <Badge variant="outline">3 ranked posts</Badge>
+        {result.partial && <Badge variant="secondary">Partial</Badge>}
         <span className="text-sm text-muted-foreground">
           {result.request_summary}
         </span>
@@ -50,7 +50,7 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
           <CardContent className="space-y-5">
             <div className="space-y-2">
               <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                Post preview
+                Preview
               </div>
               <p className="text-sm leading-6 text-foreground/90">{post.preview}</p>
               <a
@@ -59,13 +59,13 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                 rel="noreferrer"
                 className="inline-flex text-sm font-medium text-foreground underline underline-offset-4"
               >
-                Open post on LinkedIn
+                Open on LinkedIn
               </a>
             </div>
 
             <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
               <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                Why it ranked
+                Why this ranked
               </div>
               <p className="mt-2 text-sm leading-6 text-foreground/90">
                 {post.rationale}
@@ -79,7 +79,7 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                   className="rounded-xl border border-border/70 p-4"
                 >
                   <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                    Comment option {index + 1}
+                    Option {index + 1}
                   </div>
                   <p className="mt-2 text-sm leading-6 text-foreground/90">
                     {comment.text}

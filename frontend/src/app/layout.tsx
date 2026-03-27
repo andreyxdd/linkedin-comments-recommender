@@ -13,7 +13,7 @@ const heading = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "LinkedIn Comments Recommender",
+  title: "LinkedIn Comments Adviser",
   description: "Rank public LinkedIn posts and draft thoughtful comment suggestions.",
 };
 

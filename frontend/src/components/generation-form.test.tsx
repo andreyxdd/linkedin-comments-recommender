@@ -13,13 +13,13 @@ describe("GenerationForm", () => {
     render(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
 
     const submitButton = screen.getByRole("button", {
-      name: /find ranked linkedin opportunities/i,
+      name: /find opportunities/i,
     });
     expect(submitButton).toBeDisabled();
 
     await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
     await user.selectOptions(screen.getByLabelText(/topic/i), "AI agents");
-    await user.type(screen.getByLabelText(/include-only keywords/i), "linkedin growth");
+    await user.type(screen.getByLabelText(/keywords \(include only\)/i), "linkedin growth");
     await user.click(screen.getByRole("button", { name: /add keyword/i }));
 
     expect(screen.getByLabelText(/persona/i)).toHaveValue("Founder");
@@ -51,7 +51,7 @@ describe("GenerationForm", () => {
     await user.type(screen.getByLabelText(/custom persona/i), "Community-led founder");
     await user.selectOptions(screen.getByLabelText(/topic/i), "custom");
     await user.type(screen.getByLabelText(/custom topic/i), "Creator partnerships");
-    await user.type(screen.getByLabelText(/include-only keywords/i), "brand affinity");
+    await user.type(screen.getByLabelText(/keywords \(include only\)/i), "brand affinity");
     await user.click(screen.getByRole("button", { name: /add keyword/i }));
 
     fireEvent.change(screen.getByLabelText(/reserved <-> warm/i), {
@@ -59,7 +59,7 @@ describe("GenerationForm", () => {
     });
 
     await user.click(
-      screen.getByRole("button", { name: /find ranked linkedin opportunities/i }),
+      screen.getByRole("button", { name: /find opportunities/i }),
     );
 
     expect(onSubmit).toHaveBeenCalledWith(
@@ -84,7 +84,7 @@ describe("GenerationForm", () => {
 
     await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
     await user.selectOptions(screen.getByLabelText(/topic/i), "AI agents");
-    await user.type(screen.getByLabelText(/include-only keywords/i), "distribution");
+    await user.type(screen.getByLabelText(/keywords \(include only\)/i), "distribution");
     await user.click(screen.getByRole("button", { name: /add keyword/i }));
 
     rerender(<GenerationForm onSubmit={onSubmit} isLoading={true} />);

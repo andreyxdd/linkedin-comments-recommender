@@ -11,21 +11,20 @@ export default function Home() {
     useGenerationStream();
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.9),_rgba(242,238,232,0.82)_38%,_rgba(232,226,216,0.72)_100%)]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(247,252,255,0.96),_rgba(230,242,255,0.88)_40%,_rgba(214,231,249,0.78)_100%)]">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8 md:py-14">
         <header className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-end">
           <div className="space-y-4">
             <div className="text-xs font-semibold tracking-[0.28em] text-muted-foreground uppercase">
-              LinkedIn visibility MVP
+              LinkedIn Comments Adviser
             </div>
             <h1 className="max-w-4xl text-5xl leading-tight font-medium tracking-tight text-foreground md:text-6xl">
-              Find public LinkedIn posts worth commenting on, then leave with two
-              ready-to-use replies for each.
+              Find public LinkedIn posts worth engaging with and get two ready
+              replies per post.
             </h1>
             <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-              This flow is intentionally narrow: shape the request, watch the run,
-              and review three ranked opportunities without turning the product
-              into a noisy dashboard.
+              Set your angle, watch progress, and review three ranked
+              opportunities without dashboard noise.
             </p>
           </div>
 
