@@ -6,7 +6,7 @@ The current flow is:
 - collect structured persona, topic, keyword, and tone input
 - discover live public LinkedIn posts through Apify-backed actors
 - rank posts by relevance first and engagement second
-- return three ranked opportunities with rationale and two copy-ready comment suggestions per post
+- return three ranked opportunities with rationale and three copy-ready comment suggestions per post
 
 ## Architecture
 

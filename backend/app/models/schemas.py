@@ -94,9 +94,10 @@ class RankedPost(BaseModel):
     author_headline: str
     post_url: str
     preview: str
+    full_text: str
     rationale: str
     engagement: PostEngagement
-    suggested_comments: list[SuggestedComment] = Field(..., min_length=2, max_length=2)
+    suggested_comments: list[SuggestedComment] = Field(..., min_length=3, max_length=3)
 
 
 class SuggestionResult(BaseModel):

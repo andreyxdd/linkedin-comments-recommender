@@ -35,7 +35,7 @@ describe("UI branding", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "Find public LinkedIn posts worth engaging with and get two ready replies per post.",
+        name: "Find public LinkedIn posts worth engaging with and get three ready replies per post.",
       }),
     ).toBeInTheDocument();
     expect(

@@ -78,19 +78,19 @@ async def test_build_suggestion_result_shapes_generated_comments():
                 content=(
                     "```json\n"
                     '{"comments":["  First generated comment.  ",'
-                    '"Second generated comment."]}\n```'
+                    '"Second generated comment.","Third generated question?"]}\n```'
                 )
             ),
             AsyncMock(
                 content=(
                     '{"comments":["Third generated comment.",'
-                    '"Fourth generated comment."]}'
+                    '"Fourth generated comment.","Fifth generated question?"]}'
                 )
             ),
             AsyncMock(
                 content=(
                     '{"comments":["Fifth generated comment.",'
-                    '"Sixth generated comment."]}'
+                    '"Sixth generated comment.","Seventh generated question?"]}'
                 )
             ),
         ]
@@ -102,10 +102,12 @@ async def test_build_suggestion_result_shapes_generated_comments():
     ):
         result = await build_suggestion_result(_request(), _posts())
 
-    assert [len(post.suggested_comments) for post in result.posts] == [2, 2, 2]
+    assert [len(post.suggested_comments) for post in result.posts] == [3, 3, 3]
     assert result.posts[0].suggested_comments[0].id == "rank-1-comment-1"
     assert result.posts[0].suggested_comments[0].text == "First generated comment."
     assert result.posts[2].suggested_comments[1].text == "Sixth generated comment."
+    assert result.posts[2].suggested_comments[2].text == "Seventh generated question?"
+    assert result.posts[0].full_text == _posts()[0].full_text
 
 
 @pytest.mark.asyncio
@@ -115,7 +117,8 @@ async def test_build_suggestion_result_accepts_list_payload_from_generation_mode
         return_value=AsyncMock(
             content=(
                 '[{"text":"List payload comment 1."},'
-                '{"text":"List payload comment 2."}]'
+                '{"text":"List payload comment 2."},'
+                '{"text":"List payload question 3?"}]'
             )
         )
     )
@@ -128,6 +131,20 @@ async def test_build_suggestion_result_accepts_list_payload_from_generation_mode
 
     assert result.posts[0].suggested_comments[0].text == "List payload comment 1."
     assert result.posts[0].suggested_comments[1].text == "List payload comment 2."
+    assert result.posts[0].suggested_comments[2].text == "List payload question 3?"
+
+
+@pytest.mark.asyncio
+async def test_build_suggestion_result_fallback_returns_question_as_third_option():
+    with patch(
+        "app.services.linkedin_suggestions.get_generation_model",
+        side_effect=RuntimeError("missing llm config"),
+    ):
+        result = await build_suggestion_result(_request(), _posts())
+
+    for post in result.posts:
+        assert len(post.suggested_comments) == 3
+        assert post.suggested_comments[2].text.endswith("?")
 
 
 @pytest.mark.asyncio
@@ -135,9 +152,9 @@ async def test_build_suggestion_result_marks_partial_for_discovery_warning():
     generation_model = AsyncMock()
     generation_model.ainvoke = AsyncMock(
         side_effect=[
-            AsyncMock(content='{"comments":["Comment 1A.","Comment 1B."]}'),
-            AsyncMock(content='{"comments":["Comment 2A.","Comment 2B."]}'),
-            AsyncMock(content='{"comments":["Comment 3A.","Comment 3B."]}'),
+            AsyncMock(content='{"comments":["Comment 1A.","Comment 1B.","Comment 1C?"]}'),
+            AsyncMock(content='{"comments":["Comment 2A.","Comment 2B.","Comment 2C?"]}'),
+            AsyncMock(content='{"comments":["Comment 3A.","Comment 3B.","Comment 3C?"]}'),
         ]
     )
 

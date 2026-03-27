@@ -19,7 +19,7 @@ export default function Home() {
               LinkedIn Comments Adviser
             </div>
             <h1 className="max-w-4xl text-5xl leading-tight font-medium tracking-tight text-foreground md:text-6xl">
-              Find public LinkedIn posts worth engaging with and get two ready
+              Find public LinkedIn posts worth engaging with and get three ready
               replies per post.
             </h1>
             <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
@@ -43,7 +43,7 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-between">
                 <span>03 Output</span>
-                <span className="text-muted-foreground">ranked posts + 2 comments each</span>
+                <span className="text-muted-foreground">ranked posts + 3 comments each</span>
               </div>
             </div>
           </div>

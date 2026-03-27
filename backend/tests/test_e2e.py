@@ -202,8 +202,8 @@ def _reactions_fixture() -> list[dict]:
     ]
 
 
-def _generated_comment_payload(first: str, second: str) -> str:
-    return json.dumps({"comments": [first, second]})
+def _generated_comment_payload(first: str, second: str, third: str) -> str:
+    return json.dumps({"comments": [first, second, third]})
 
 
 @pytest.mark.asyncio
@@ -263,9 +263,27 @@ async def test_pipeline_emits_linkedin_milestones_and_ranked_posts(
     generation_model = AsyncMock()
     generation_model.ainvoke = AsyncMock(
         side_effect=[
-            AsyncMock(content=_generated_comment_payload("Comment 1A", "Comment 1B")),
-            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B")),
-            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B")),
+            AsyncMock(
+                content=_generated_comment_payload(
+                    "Comment 1A",
+                    "Comment 1B",
+                    "Comment 1C?",
+                )
+            ),
+            AsyncMock(
+                content=_generated_comment_payload(
+                    "Comment 2A",
+                    "Comment 2B",
+                    "Comment 2C?",
+                )
+            ),
+            AsyncMock(
+                content=_generated_comment_payload(
+                    "Comment 3A",
+                    "Comment 3B",
+                    "Comment 3C?",
+                )
+            ),
         ]
     )
 
@@ -318,10 +336,11 @@ async def test_pipeline_emits_linkedin_milestones_and_ranked_posts(
     assert top_post["rank"] == 1
     assert top_post["post_url"] == _posts_fixture()[3]["post_url"]
     assert top_post["preview"].startswith("Founders using AI agents")
+    assert top_post["full_text"].startswith("Founders using AI agents")
     assert "relevance" in top_post["rationale"].lower()
     assert top_post["engagement"]["reactions"] == 120
     assert top_post["engagement"]["comments"] == 35
-    assert len(top_post["suggested_comments"]) == 2
+    assert len(top_post["suggested_comments"]) == 3
     assert all(comment["text"] for comment in top_post["suggested_comments"])
     assert "Founder" in result["request_summary"]
     assert "AI agents" in result["request_summary"]
@@ -351,18 +370,21 @@ async def test_pipeline_returns_generated_comments_for_each_ranked_post(
                 content=_generated_comment_payload(
                     "Generated comment 1A",
                     "Generated comment 1B",
+                    "Generated comment 1C?",
                 )
             ),
             AsyncMock(
                 content=_generated_comment_payload(
                     "Generated comment 2A",
                     "Generated comment 2B",
+                    "Generated comment 2C?",
                 )
             ),
             AsyncMock(
                 content=_generated_comment_payload(
                     "Generated comment 3A",
                     "Generated comment 3B",
+                    "Generated comment 3C?",
                 )
             ),
         ]
@@ -397,10 +419,13 @@ async def test_pipeline_returns_generated_comments_for_each_ranked_post(
     assert generation_model.ainvoke.await_count == 3
     assert result["posts"][0]["suggested_comments"][0]["text"] == "Generated comment 1A"
     assert result["posts"][0]["suggested_comments"][1]["text"] == "Generated comment 1B"
+    assert result["posts"][0]["suggested_comments"][2]["text"] == "Generated comment 1C?"
     assert result["posts"][1]["suggested_comments"][0]["text"] == "Generated comment 2A"
     assert result["posts"][1]["suggested_comments"][1]["text"] == "Generated comment 2B"
+    assert result["posts"][1]["suggested_comments"][2]["text"] == "Generated comment 2C?"
     assert result["posts"][2]["suggested_comments"][0]["text"] == "Generated comment 3A"
     assert result["posts"][2]["suggested_comments"][1]["text"] == "Generated comment 3B"
+    assert result["posts"][2]["suggested_comments"][2]["text"] == "Generated comment 3C?"
 
 
 @pytest.mark.asyncio
@@ -423,9 +448,27 @@ async def test_pipeline_returns_partial_result_when_reaction_enrichment_fails(
     generation_model = AsyncMock()
     generation_model.ainvoke = AsyncMock(
         side_effect=[
-            AsyncMock(content=_generated_comment_payload("Comment 1A", "Comment 1B")),
-            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B")),
-            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B")),
+            AsyncMock(
+                content=_generated_comment_payload(
+                    "Comment 1A",
+                    "Comment 1B",
+                    "Comment 1C?",
+                )
+            ),
+            AsyncMock(
+                content=_generated_comment_payload(
+                    "Comment 2A",
+                    "Comment 2B",
+                    "Comment 2C?",
+                )
+            ),
+            AsyncMock(
+                content=_generated_comment_payload(
+                    "Comment 3A",
+                    "Comment 3B",
+                    "Comment 3C?",
+                )
+            ),
         ]
     )
 
@@ -483,8 +526,8 @@ async def test_pipeline_returns_partial_result_when_comment_generation_degrades(
     generation_model.ainvoke = AsyncMock(
         side_effect=[
             RuntimeError("temporary generation hiccup"),
-            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B")),
-            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B")),
+            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B", "Comment 2C?")),
+            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B", "Comment 3C?")),
         ]
     )
 

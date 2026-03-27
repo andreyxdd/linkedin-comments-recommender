@@ -28,6 +28,7 @@ export interface RankedPost {
   author_headline: string;
   post_url: string;
   preview: string;
+  full_text: string;
   rationale: string;
   engagement: PostEngagement;
   suggested_comments: SuggestedComment[];

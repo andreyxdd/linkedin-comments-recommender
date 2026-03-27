@@ -42,6 +42,7 @@ async def build_suggestion_result(
             author_headline=post.author_headline,
             post_url=post.post_url,
             preview=post.preview,
+            full_text=post.full_text,
             rationale=_build_rationale(request, post),
             engagement=PostEngagement(
                 reactions=post.total_reactions,
@@ -180,7 +181,7 @@ def _comment_messages(
             content=(
                 "You write short LinkedIn comments for thoughtful professionals. "
                 "Return strict JSON with exactly one key named 'comments' whose "
-                "value is an array of exactly two strings. Each comment must be 1-2 "
+                "value is an array of exactly three strings. Each comment must be 1-2 "
                 "sentences, concrete, human-sounding, and ready to paste as-is. "
                 "Do not use emojis, hashtags, quotation marks around the full "
                 "comment, or generic praise with no substance."
@@ -198,9 +199,10 @@ def _comment_messages(
                 f"Post detail: {post.full_text[:900]}\n"
                 f"Hashtags: {hashtags}\n"
                 f"Engagement: {engagement_summary}\n"
-                "Write two distinct comments. The first should validate a specific "
+                "Write three distinct comments. The first should validate a specific "
                 "idea from the post. The second should add a thoughtful extension, "
-                "implication, or respectful angle."
+                "implication, or respectful angle. The third should be a high-signal "
+                "question that invites discussion and ends with a question mark."
             )
         ),
     ]
@@ -214,12 +216,13 @@ def _parse_generated_comments(
     payload = _extract_json_payload(payload_text)
     cleaned_comments = _extract_comment_texts(payload)
     cleaned_comments = [comment for comment in cleaned_comments if comment]
-    if len(cleaned_comments) < 2:
-        raise ValueError("Comment payload must contain two non-empty comments.")
+    if len(cleaned_comments) < 3:
+        raise ValueError("Comment payload must contain three non-empty comments.")
 
     return [
         SuggestedComment(id=f"rank-{rank}-comment-1", text=cleaned_comments[0]),
         SuggestedComment(id=f"rank-{rank}-comment-2", text=cleaned_comments[1]),
+        SuggestedComment(id=f"rank-{rank}-comment-3", text=cleaned_comments[2]),
     ]
 
 
@@ -323,6 +326,13 @@ def _build_fallback_comments(
             text=(
                 f"{follow_up}. Bringing {focus} into the discussion keeps the "
                 f"{topic} conversation grounded in execution."
+            ),
+        ),
+        SuggestedComment(
+            id=f"rank-{rank}-comment-3",
+            text=(
+                f"What signal would you track first to prove {focus} is improving "
+                f"real outcomes for {topic}?"
             ),
         ),
     ]

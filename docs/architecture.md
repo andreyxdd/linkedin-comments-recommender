@@ -6,7 +6,7 @@ This app is a narrow MVP for improving a user's visibility on LinkedIn.
 The product does three things in one run:
 - collect structured user input about who the user is, what conversations they want to join, and how their comments should sound
 - discover and rank relevant public LinkedIn posts via Apify-backed data collection
-- generate two copy-ready comment drafts for each of the top three posts
+- generate three copy-ready comment drafts for each of the top three posts
 
 The MVP deliberately stops there. It does not connect to a LinkedIn account, publish comments, schedule actions, or store user history.
 
@@ -140,7 +140,7 @@ Responsibilities:
 - call discovery
 - rank and select the top three posts
 - summarize enough post context for prompting
-- generate two comments per selected post
+- generate three comments per selected post
 - shape the final streamed result contract
 
 The LLM should help with analysis and comment writing, not with basic record normalization or deterministic ranking.
@@ -186,7 +186,7 @@ flowchart TD
     normalize --> rank[RankPosts]
     rank --> topPosts[Top3Posts]
     topPosts --> analyze[LLMPostAnalysis]
-    analyze --> comments[GenerateTwoCommentsPerPost]
+    analyze --> comments[GenerateThreeCommentsPerPost]
     comments --> result[SuggestionResult]
     result --> sse[StreamMilestonesAndFinalPayload]
 ```
@@ -199,7 +199,7 @@ Priority areas:
 - ranking behavior
 - API contract and streamed result format
 - minimal frontend form behavior for structured inputs
-- end-to-end happy path producing three posts and two comments per post
+- end-to-end happy path producing three posts and three comments per post
 - partial-result behavior when one stage degrades
 
 Good tests assert:
