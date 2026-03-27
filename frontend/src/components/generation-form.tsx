@@ -152,6 +152,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
   };
 
   const removeKeyword = (keyword: string) => {
+    if (isLoading) return;
     setKeywords((current) => current.filter((item) => item !== keyword));
   };
 
@@ -298,7 +299,9 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
                   key={keyword}
                   type="button"
                   onClick={() => removeKeyword(keyword)}
-                  className="rounded-full border border-border px-3 py-1 text-sm text-muted-foreground transition hover:border-foreground hover:text-foreground"
+                  disabled={isLoading}
+                  aria-disabled={isLoading}
+                  className="rounded-full border border-border px-3 py-1 text-sm text-muted-foreground transition hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-foreground"
                 >
                   {keyword} x
                 </button>

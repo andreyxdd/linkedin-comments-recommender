@@ -138,4 +138,47 @@ describe("GenerationForm", () => {
       screen.getByRole("button", { name: /preparing/i }),
     ).toBeDisabled();
   });
+
+  it("does not allow keyword removal while loading", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    const { rerender } = render(
+      <GenerationForm onSubmit={onSubmit} isLoading={false} />,
+    );
+
+    await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
+    await user.selectOptions(screen.getByLabelText(/topic/i), "AI agents");
+    await user.type(screen.getByLabelText(/keywords \(include only\)/i), "distribution");
+    await user.click(screen.getByRole("button", { name: /add keyword/i }));
+
+    rerender(<GenerationForm onSubmit={onSubmit} isLoading={true} />);
+
+    const keywordChip = screen.getByRole("button", { name: "distribution x" });
+    expect(keywordChip).toBeDisabled();
+
+    await user.click(keywordChip);
+
+    expect(screen.getByRole("button", { name: "distribution x" })).toBeInTheDocument();
+  });
+
+  it("re-enables submit after loading when valid inputs remain intact", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    const { rerender } = render(
+      <GenerationForm onSubmit={onSubmit} isLoading={false} />,
+    );
+
+    await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
+    await user.selectOptions(screen.getByLabelText(/topic/i), "AI agents");
+    await user.type(screen.getByLabelText(/keywords \(include only\)/i), "distribution");
+    await user.click(screen.getByRole("button", { name: /add keyword/i }));
+
+    rerender(<GenerationForm onSubmit={onSubmit} isLoading={true} />);
+    rerender(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
+
+    expect(screen.getByRole("button", { name: /find posts to comment on/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "distribution x" })).toBeInTheDocument();
+  });
 });
