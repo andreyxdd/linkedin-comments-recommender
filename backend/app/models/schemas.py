@@ -57,6 +57,35 @@ class SuggestedComment(BaseModel):
     text: str
 
 
+class ReactionSample(BaseModel):
+    """A sampled reaction record used for downstream enrichment."""
+
+    reactor_name: str
+    reactor_headline: str = ""
+    reactor_profile_url: str = ""
+    reaction_type: str
+
+
+class NormalizedLinkedInPost(BaseModel):
+    """Stable internal post record derived from external Apify payloads."""
+
+    activity_id: str
+    post_url: str
+    author_name: str
+    author_headline: str = ""
+    author_profile_url: str = ""
+    preview: str
+    full_text: str
+    hashtags: list[str] = Field(default_factory=list)
+    total_reactions: int = Field(default=0, ge=0)
+    total_comments: int = Field(default=0, ge=0)
+    total_shares: int = Field(default=0, ge=0)
+    reaction_types: list[str] = Field(default_factory=list)
+    reaction_samples: list[ReactionSample] = Field(default_factory=list)
+    published_timestamp: int = 0
+    search_query: str = ""
+
+
 class RankedPost(BaseModel):
     """A ranked public post suggestion for the user to engage with."""
 

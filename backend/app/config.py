@@ -1,9 +1,20 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 class Settings(BaseSettings):
     app_name: str = "AI Agentic Loop API"
     debug: bool = False
+
+    # LinkedIn discovery configuration
+    apify_api_token: str = ""
+    apify_posts_actor_id: str = "apimaestro/linkedin-posts-search-scraper-no-cookies"
+    apify_reactions_actor_id: str = "harvestapi/linkedin-post-reactions"
+    reaction_enrichment_count: int = 8
+    max_reactions_per_post: int = 20
 
     # LLM configuration
     llm_provider: str = "anthropic"  # "anthropic" or "openai"
@@ -22,7 +33,7 @@ class Settings(BaseSettings):
     # CORS
     frontend_url: str = "http://localhost:3000"
 
-    model_config = {"env_file": ".env", "extra": "ignore"}
+    model_config = {"env_file": str(ENV_FILE), "extra": "ignore"}
 
 
 settings = Settings()

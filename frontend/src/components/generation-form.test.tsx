@@ -22,6 +22,8 @@ describe("GenerationForm", () => {
     await user.type(screen.getByLabelText(/include-only keywords/i), "linkedin growth");
     await user.click(screen.getByRole("button", { name: /add keyword/i }));
 
+    expect(screen.getByLabelText(/persona/i)).toHaveValue("Founder");
+    expect(screen.getByLabelText(/topic/i)).toHaveValue("AI agents");
     expect(submitButton).toBeEnabled();
 
     await user.click(submitButton);

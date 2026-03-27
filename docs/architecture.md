@@ -105,6 +105,11 @@ Responsibilities:
 
 This adapter should also be the first place to handle provider-specific failures, timeouts, and response oddities.
 
+Current implementation details:
+- post search uses `apimaestro/linkedin-posts-search-scraper-no-cookies`
+- reaction enrichment uses `harvestapi/linkedin-post-reactions`
+- reaction enrichment is intentionally capped to a configurable subset of candidate posts so the run stays fast enough for a single interactive request
+
 #### `PostRanker`
 Scores candidate posts using simple, testable logic.
 
@@ -113,6 +118,11 @@ The ranking rule for MVP is:
 - engagement second
 
 This logic should stay outside the LLM so it can be tested directly and tuned without prompt surgery.
+
+Current implementation details:
+- relevance is lexical and deterministic: topic, keywords, and persona are matched against post text, author headline, and hashtags
+- engagement is a secondary tie-breaker based on reactions, comments, shares, and sampled reaction enrichment
+- sorting is lexicographic by `(relevance_score, engagement_score, published_timestamp)` so engagement never overrides a materially more relevant post
 
 #### `CommentGenerationPipeline`
 Owns the fetch -> rank -> analyze -> generate flow using the existing streamed backend pipeline.

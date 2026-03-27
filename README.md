@@ -1,8 +1,12 @@
-# ai-fullstack-app
+# linkedin-comments-recommender
 
-A full-stack template for building **AI agentic loop** applications. The pattern: user input → external data fetch → AI analysis → content generation → automated quality evaluation → retry or return.
+A full-stack app for finding relevant public LinkedIn posts and drafting comment suggestions in one streamed run.
 
-Ships with a working **Study Guide Generator** demo (Wikipedia + LLM) so you can clone, configure one API key, and run.
+The current flow is:
+- collect structured persona, topic, keyword, and tone input
+- discover live public LinkedIn posts through Apify-backed actors
+- rank posts by relevance first and engagement second
+- return three ranked opportunities with rationale and two copy-ready comment suggestions per post
 
 ## Architecture
 
@@ -14,13 +18,12 @@ graph LR
     end
 
     subgraph Backend [FastAPI - localhost:8000]
-        API[POST /api/generate] --> Graph
-        subgraph Graph [LangGraph Pipeline]
-            Fetch[fetch_sources] --> Analyze[analyze_content]
-            Analyze --> Generate[generate_material]
-            Generate --> Evaluate[evaluate_quality]
-            Evaluate -->|passed| Done[Return Results]
-            Evaluate -->|failed| Generate
+        API[POST /api/generate] --> Flow
+        subgraph Flow [Suggestion Pipeline]
+            Input[Normalize Input] --> Discovery[Discover Posts]
+            Discovery --> Ranking[Rank Candidates]
+            Ranking --> Comments[Prepare Suggestions]
+            Comments --> Done[Return Results]
         end
     end
 
@@ -34,7 +37,8 @@ graph LR
 |-------|------|
 | Frontend | Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, pnpm |
 | Backend | FastAPI, Python 3.12+, LangGraph, langchain-core, uv |
-| LLM | Claude (default), OpenAI (swap via env var) |
+| Discovery | Apify LinkedIn post search + reactions actors |
+| LLM | Claude or OpenAI for later comment generation stages |
 | Dev | Docker Compose, Makefile |
 | CI | GitHub Actions |
 | Deploy target | Vercel (frontend) + Railway (backend) |
@@ -44,23 +48,24 @@ graph LR
 ### Prerequisites
 
 - Docker and Docker Compose
-- An Anthropic API key (or OpenAI key)
+- An Apify API token
+- Optional: an Anthropic or OpenAI API key for later stages
 
 ### Steps
 
 ```bash
 # 1. Clone and enter
-git clone <your-repo-url> && cd ai-fullstack-app
+git clone <your-repo-url> && cd linkedin-comments-recommender
 
 # 2. Configure
 cp .env.example .env
-# Edit .env — set ANTHROPIC_API_KEY
+# Edit .env — set APIFY_API_TOKEN
 
 # 3. Run
 make dev
 ```
 
-Open http://localhost:3000. Enter a topic, pick a format, hit Generate.
+Open `http://localhost:3000`. Choose a persona, topic, and keywords, then run the LinkedIn suggestion flow.
 
 ### Without Docker
 
@@ -75,32 +80,32 @@ cd frontend && pnpm install && pnpm dev
 
 ## How to Customize
 
-This template is designed to be forked and adapted. Here's what to change for your domain:
+This app already uses a LinkedIn-specific contract. If you want to adapt it further, these are the main seams:
 
 ### 1. Data Source
 
-Replace the `WikipediaFetcher` in `backend/app/services/data_fetcher.py`:
+Replace or extend the live discovery adapter in `backend/app/services/linkedin_discovery.py`:
 
 ```python
-class YourDataFetcher:
-    async def fetch(self, topic: str, context: str) -> list[DataItem]:
-        # Fetch from your API (Apify, Twitter, internal DB, etc.)
+class YourDiscoveryAdapter:
+    async def discover(self, request: SuggestionRequest) -> list[NormalizedLinkedInPost]:
+        # Fetch from your API (Apify, internal DB, etc.)
         ...
 ```
 
 ### 2. Domain Models
 
 Edit `backend/app/models/schemas.py`:
-- `GenerationRequest` — the fields your UI form collects
-- `OutputFormat` / `DifficultyLevel` — your domain's enums
-- `DraftEvaluation` — the quality criteria for your use case
+- `SuggestionRequest` — the fields your UI form collects
+- `NormalizedLinkedInPost` — the stable internal record from discovery
+- `SuggestionResult` — the public API contract returned to the UI
 
 ### 3. Graph Nodes
 
-Modify the prompts and logic in `backend/app/graph/nodes.py`:
-- `analyze_content` — how source data is analyzed
-- `generate_material` — what gets generated and in what format
-- `evaluate_quality` — your quality criteria and scoring rubric
+Modify the flow in:
+- `backend/app/services/post_ranking.py` — deterministic ranking logic
+- `backend/app/services/linkedin_suggestions.py` — rationale and comment suggestion shaping
+- `backend/app/graph/pipeline.py` — streamed milestone order
 
 ### 4. Frontend
 
@@ -122,13 +127,13 @@ EVALUATION_MODEL=gpt-4o-mini
 │   ├── app/
 │   │   ├── api/routes.py          # HTTP endpoints
 │   │   ├── graph/
-│   │   │   ├── nodes.py           # LangGraph node functions
-│   │   │   ├── pipeline.py        # Graph construction + SSE streaming
-│   │   │   └── state.py           # Graph state definition
+│   │   │   └── pipeline.py        # SSE milestone streaming
 │   │   ├── models/schemas.py      # Pydantic models (shared contract)
 │   │   ├── services/
-│   │   │   ├── data_fetcher.py    # DataFetcher protocol + implementations
-│   │   │   └── llm.py             # LLM provider factory
+│   │   │   ├── linkedin_discovery.py   # Apify-backed post discovery adapter
+│   │   │   ├── post_ranking.py         # Deterministic relevance-first ranking
+│   │   │   ├── linkedin_suggestions.py # Result shaping + comment placeholders
+│   │   │   └── llm.py                  # LLM provider factory
 │   │   ├── config.py              # Settings via env vars
 │   │   └── main.py                # FastAPI app
 │   ├── tests/
@@ -157,7 +162,7 @@ make setup         # First-time setup (install deps, copy .env)
 make dev           # Start with Docker (hot reload)
 make dev-backend   # Backend only (no Docker)
 make dev-frontend  # Frontend only (no Docker)
-make test          # Run backend tests
+make test          # Run backend and frontend tests
 make lint          # Run all linters
 make lint-fix      # Auto-fix lint issues
 make clean         # Remove containers and build artifacts
