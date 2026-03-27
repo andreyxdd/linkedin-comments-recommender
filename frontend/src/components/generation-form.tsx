@@ -34,8 +34,10 @@ const TOPIC_OPTIONS = [
   "Custom",
 ] as const;
 
+const PERSONA_SUBTITLE =
+  "Defines the role perspective we use for comment voice and examples.";
+
 const PERSONA_GUIDANCE: Record<string, string> = {
-  default: "Helps tailor comment voice and examples to your role.",
   founder: "Founder mode: focuses on product, traction, and POV-based comments.",
   consultant:
     "Consultant mode: emphasizes frameworks, diagnosis, and practical recommendations.",
@@ -43,8 +45,7 @@ const PERSONA_GUIDANCE: Record<string, string> = {
     "Operator mode: prioritizes execution detail, process, and measurable outcomes.",
   "job seeker":
     "Job seeker mode: highlights learning mindset, curiosity, and relevant experience.",
-  custom:
-    "Custom mode: define your own role framing for more precise comment direction.",
+  custom: "Custom mode: define your own role framing for more precise comment direction.",
 };
 
 const DEFAULT_TONE: ToneProfile = {
@@ -137,7 +138,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
     resolvedTopic.length > 0 &&
     keywords.length > 0;
 
-  const activePersonaGuidance = PERSONA_GUIDANCE[persona.toLowerCase()] ?? PERSONA_GUIDANCE.default;
+  const activePersonaGuidance = PERSONA_GUIDANCE[persona.toLowerCase()];
 
   const addKeyword = () => {
     const cleaned = keywordInput.trim();
@@ -180,12 +181,12 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="persona" className="text-sm font-medium">
                 Persona
               </label>
-              <p className="text-xs text-muted-foreground">{activePersonaGuidance}</p>
+              <p className="text-xs text-muted-foreground">{PERSONA_SUBTITLE}</p>
               <select
                 id="persona"
                 value={persona.toLowerCase() === "custom" ? "custom" : persona}
@@ -203,6 +204,9 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
                   </option>
                 ))}
               </select>
+              {activePersonaGuidance && (
+                <p className="text-xs text-muted-foreground">{activePersonaGuidance}</p>
+              )}
               {persona === "custom" && (
                 <div className="space-y-1">
                   <label htmlFor="custom-persona" className="text-xs text-muted-foreground">
@@ -267,6 +271,9 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
             <p className="text-xs text-muted-foreground">
               Add must-match words or short phrases to keep discovery focused.
             </p>
+            <p className="text-xs text-muted-foreground">
+              Keep keywords specific so discovery stays focused.
+            </p>
             <div className="flex gap-2">
               <Input
                 id="keyword-input"
@@ -297,9 +304,6 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Keep keywords specific so discovery stays focused.
-            </p>
           </div>
 
           <div className="space-y-3">
@@ -321,8 +325,8 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Each slider balances two writing styles. Start with a preset, then
-              fine-tune.
+              Each slider balances two writing styles of your comments. Start
+              with a preset, then fine-tune.
             </p>
           </div>
 

@@ -18,7 +18,7 @@ const sampleResult: SuggestionResult = {
       author: "Ada Lovelace",
       author_headline: "Founder at Analytical Engine Labs",
       preview: "Short preview text",
-      full_text: `${"Alpha ".repeat(360)}TAIL_ONE`,
+      full_text: "Short preview text\nSecond paragraph starts here.\nTAIL_ONE",
       rationale: "Strong topic match with active engagement.",
       engagement: { reactions: 24, comments: 7 },
       suggested_comments: [
@@ -33,7 +33,7 @@ const sampleResult: SuggestionResult = {
       author: "Grace Hopper",
       author_headline: "CTO at Compiler Works",
       preview: "Second preview text",
-      full_text: `${"Beta ".repeat(450)}TAIL_TWO`,
+      full_text: "Second preview text\nMore detail for the next section.\nTAIL_TWO",
       rationale: "Strong operational angle and active engagement.",
       engagement: { reactions: 30, comments: 12 },
       suggested_comments: [
@@ -67,7 +67,7 @@ describe("ResultDisplay", () => {
     expect(screen.getByText("7 comments")).toHaveClass("bg-emerald-100/80");
   });
 
-  it("keeps cards collapsed, then reveals and bounds full text with single-open behavior", async () => {
+  it("reveals post continuation inline from the preview boundary", async () => {
     const user = userEvent.setup();
     render(<ResultDisplay result={sampleResult} />);
 
@@ -75,21 +75,10 @@ describe("ResultDisplay", () => {
     expect(screen.queryByText(/TAIL_TWO/)).not.toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: "Show full post for Ada Lovelace" }),
+      screen.getByRole("button", { name: "See more post text for Ada Lovelace" }),
     );
 
-    expect(screen.queryByText(/TAIL_ONE/)).not.toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", {
-        name: "Show rest of full text for Ada Lovelace",
-      }),
-    );
     expect(screen.getByText(/TAIL_ONE/)).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Show full post for Grace Hopper" }),
-    );
-    expect(screen.queryByText(/TAIL_ONE/)).not.toBeInTheDocument();
     expect(screen.queryByText(/TAIL_TWO/)).not.toBeInTheDocument();
   });
 
@@ -128,5 +117,15 @@ describe("ResultDisplay", () => {
       .getAllByText("Option 1")[0]
       .closest('[data-testid="comment-options-row"]');
     expect(firstRow).toHaveClass("overflow-x-auto");
+  });
+
+  it("preserves newline formatting in preview text", () => {
+    render(<ResultDisplay result={sampleResult} />);
+
+    const previewBlock = screen
+      .getByRole("button", { name: "See more post text for Ada Lovelace" })
+      .closest("p");
+
+    expect(previewBlock).toHaveClass("whitespace-pre-wrap");
   });
 });

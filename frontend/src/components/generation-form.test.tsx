@@ -102,8 +102,13 @@ describe("GenerationForm", () => {
     render(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
 
     expect(
-      screen.getByText("Helps tailor comment voice and examples to your role."),
+      screen.getByText(
+        "Defines the role perspective we use for comment voice and examples.",
+      ),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Founder mode: focuses on product, traction, and POV-based comments\./i),
+    ).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
 
@@ -122,5 +127,15 @@ describe("GenerationForm", () => {
 
     expect(screen.getByLabelText(/reserved <-> warm/i)).toHaveValue("76");
     expect(screen.getByText("Leaning Warm")).toBeInTheDocument();
+  });
+
+  it("keeps the submit button disabled while loading", () => {
+    const onSubmit = vi.fn();
+
+    render(<GenerationForm onSubmit={onSubmit} isLoading={true} />);
+
+    expect(
+      screen.getByRole("button", { name: /preparing/i }),
+    ).toBeDisabled();
   });
 });

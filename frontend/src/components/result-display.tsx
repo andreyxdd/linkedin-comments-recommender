@@ -17,10 +17,7 @@ interface ResultDisplayProps {
   result: SuggestionResult | null;
 }
 
-const FULL_TEXT_PREVIEW_CHAR_LIMIT = 2000;
-
 export function ResultDisplay({ result }: ResultDisplayProps) {
-  const [expandedPostUrl, setExpandedPostUrl] = useState<string | null>(null);
   const [revealedRestByPost, setRevealedRestByPost] = useState<
     Record<string, boolean>
   >({});
@@ -37,11 +34,6 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
   }, [copyFeedback]);
 
   if (!result) return null;
-
-  const togglePostExpansion = (postUrl: string) => {
-    setExpandedPostUrl((previous) => (previous === postUrl ? null : postUrl));
-    setRevealedRestByPost((previous) => ({ ...previous, [postUrl]: false }));
-  };
 
   const revealRest = (postUrl: string) => {
     setRevealedRestByPost((previous) => ({ ...previous, [postUrl]: true }));
@@ -85,20 +77,14 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
       )}
 
       {result.posts.map((post) => {
-        const isExpanded = expandedPostUrl === post.post_url;
+        const previewText = post.preview.trimEnd();
         const fullTextSource = post.full_text.trimStart();
-        const trimmedPreview = post.preview.trim();
-        const dedupedCandidate = fullTextSource.startsWith(trimmedPreview)
-          ? fullTextSource.slice(trimmedPreview.length).trimStart()
-          : post.full_text;
-        const dedupedFullText = dedupedCandidate.length > 0 ? dedupedCandidate : post.full_text;
-        const isLongText = dedupedFullText.length > FULL_TEXT_PREVIEW_CHAR_LIMIT;
+        const continuationText = fullTextSource.startsWith(previewText)
+          ? fullTextSource.slice(previewText.length)
+          : "";
+        const hasContinuation =
+          continuationText.trim().length > 0 && continuationText.length > 0;
         const hasRevealedRest = Boolean(revealedRestByPost[post.post_url]);
-        const fullTextPreview = isLongText
-          ? `${dedupedFullText.slice(0, FULL_TEXT_PREVIEW_CHAR_LIMIT).trimEnd()}...`
-          : dedupedFullText;
-        const displayedFullText =
-          isLongText && !hasRevealedRest ? fullTextPreview : dedupedFullText;
 
         return (
           <Card
@@ -126,23 +112,27 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                 <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
                   Preview
                 </div>
-                <p className="text-sm leading-6 text-foreground/90">{post.preview}</p>
+                <p
+                  id={`full-post-${post.rank}`}
+                  className="text-sm leading-6 text-foreground/90 whitespace-pre-wrap"
+                >
+                  {previewText}
+                  {hasContinuation && !hasRevealedRest && (
+                    <>
+                      {" "}
+                      <button
+                        type="button"
+                        aria-label={`See more post text for ${post.author}`}
+                        onClick={() => revealRest(post.post_url)}
+                        className="inline font-medium text-foreground underline underline-offset-4"
+                      >
+                        See more...
+                      </button>
+                    </>
+                  )}
+                  {hasContinuation && hasRevealedRest && continuationText}
+                </p>
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    aria-label={
-                      isExpanded
-                        ? `Hide full post for ${post.author}`
-                        : `Show full post for ${post.author}`
-                    }
-                    aria-expanded={isExpanded}
-                    aria-controls={`full-post-${post.rank}`}
-                    onClick={() => togglePostExpansion(post.post_url)}
-                  >
-                    {isExpanded ? "Hide full post" : "Show more"}
-                  </Button>
                   <a
                     href={post.post_url}
                     target="_blank"
@@ -153,32 +143,6 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                   </a>
                 </div>
               </div>
-
-              {isExpanded && (
-                <div
-                  id={`full-post-${post.rank}`}
-                  className="rounded-xl border border-border/70 bg-muted/20 p-4"
-                >
-                  <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                    Full post continuation
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-foreground/90">
-                    {displayedFullText}
-                  </p>
-                  {isLongText && !hasRevealedRest && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="mt-2"
-                      aria-label={`Show rest of full text for ${post.author}`}
-                      onClick={() => revealRest(post.post_url)}
-                    >
-                      See more
-                    </Button>
-                  )}
-                </div>
-              )}
 
               <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
                 <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
@@ -191,12 +155,12 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
 
               <div
                 data-testid="comment-options-row"
-                className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible md:pb-0"
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1"
               >
                 {post.suggested_comments.map((comment, index) => (
                   <div
                     key={comment.id}
-                    className="min-w-[84%] snap-start rounded-xl border border-border/70 p-4 md:min-w-0"
+                    className="min-w-[18rem] max-w-[26rem] snap-start rounded-xl border border-border/70 p-4"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
