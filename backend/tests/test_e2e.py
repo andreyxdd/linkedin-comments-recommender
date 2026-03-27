@@ -415,3 +415,17 @@ async def test_cors_allows_loopback_frontend_origin(client: AsyncClient):
     )
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:3000"
+
+
+@pytest.mark.asyncio
+async def test_cors_allows_loopback_frontend_on_worktree_port(client: AsyncClient):
+    response = await client.options(
+        "/api/generate",
+        headers={
+            "Origin": "http://127.0.0.1:3003",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:3003"

@@ -41,9 +41,19 @@ def _cors_origins(frontend_url: str) -> list[str]:
     return sorted(origins)
 
 
+def _cors_origin_regex(frontend_url: str) -> str | None:
+    parsed = urlsplit(frontend_url)
+
+    if parsed.hostname in {"localhost", "127.0.0.1"}:
+        return rf"^{parsed.scheme}://(localhost|127\.0\.0\.1)(:\d+)?$"
+
+    return None
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(settings.frontend_url),
+    allow_origin_regex=_cors_origin_regex(settings.frontend_url),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

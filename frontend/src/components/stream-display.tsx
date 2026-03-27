@@ -15,32 +15,50 @@ interface StreamDisplayProps {
   isLoading: boolean;
 }
 
-const steps = [
+const milestones = [
   {
-    node: "input",
-    title: "Lock in the request",
-    detail: "Normalize persona, topic, keywords, and tone.",
+    title: "Discover relevant posts",
+    detail: "Search public LinkedIn conversations worth a closer look.",
   },
   {
-    node: "discovery",
-    title: "Search public posts",
-    detail: "Gather the candidate conversations worth a closer look.",
+    title: "Score the shortlist",
+    detail: "Rank the strongest matches before drafting comments.",
   },
   {
-    node: "ranking",
-    title: "Rank the shortlist",
-    detail: "Favor relevance first, then engagement.",
-  },
-  {
-    node: "comment_generation",
-    title: "Draft comment angles",
-    detail: "Prepare two copy-ready comments for each ranked post.",
+    title: "Prepare final suggestions",
+    detail: "Package the top opportunities with two ready-to-use replies each.",
   },
 ] as const;
 
+const milestoneIndexByNode: Record<string, number> = {
+  input: 0,
+  discovery: 0,
+  ranking: 1,
+  comment_generation: 2,
+  complete: 2,
+};
+
+const statusLabelByNode: Record<string, string> = {
+  input: "Getting discovery ready",
+  discovery: "Discovering relevant LinkedIn posts",
+  ranking: "Scoring the strongest matches",
+  comment_generation: "Preparing your final suggestions",
+  complete: "Final suggestions are ready to review.",
+};
+
 export function StreamDisplay({ events, isLoading }: StreamDisplayProps) {
-  const completedNodes = new Set(events.map((event) => event.node));
-  const latestMessage = events.at(-1)?.message;
+  const latestStatusEvent = [...events]
+    .reverse()
+    .find((event) => event.event_type === "status");
+  const activeMilestoneIndex =
+    latestStatusEvent?.node && latestStatusEvent.node in milestoneIndexByNode
+      ? milestoneIndexByNode[latestStatusEvent.node]
+      : null;
+  const hasResult = events.some((event) => event.event_type === "result");
+  const latestEvent = events.at(-1);
+  const latestMessage = latestEvent
+    ? statusLabelByNode[latestEvent.node] ?? "Working through the next milestone."
+    : null;
 
   return (
     <Card className="border border-border/70 bg-card/90 backdrop-blur">
@@ -60,16 +78,19 @@ export function StreamDisplay({ events, isLoading }: StreamDisplayProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {steps.map((step, index) => {
-            const isComplete = completedNodes.has(step.node);
-            const isActive =
-              isLoading && !isComplete && steps[index - 1]?.node
-                ? completedNodes.has(steps[index - 1].node)
-                : isLoading && index === 0 && events.length === 0;
+          {milestones.map((step, index) => {
+            const isComplete =
+              hasResult ||
+              (activeMilestoneIndex !== null && index < activeMilestoneIndex);
+            const isActive = isLoading
+              ? activeMilestoneIndex === null
+                ? index === 0
+                : index === activeMilestoneIndex && !hasResult
+              : false;
 
             return (
               <div
-                key={step.node}
+                key={step.title}
                 className="flex gap-3 rounded-xl border border-border/70 p-4"
               >
                 <Badge

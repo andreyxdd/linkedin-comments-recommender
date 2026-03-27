@@ -58,6 +58,15 @@ The frontend should preserve the user's input when a run fails so recovery does 
 ### Progress UX
 The user should see concise milestones instead of raw internal logs.
 
+The frontend progress card should collapse backend pipeline updates into three
+user-facing milestones that match the product flow:
+- `Discover relevant posts`
+- `Score the shortlist`
+- `Prepare final suggestions`
+
+The backend may emit more granular streamed updates, but the default UI should
+map them into these three labels instead of surfacing internal pipeline jargon.
+
 Examples:
 - `Searching public LinkedIn posts`
 - `Scoring relevance and engagement`
