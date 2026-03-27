@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 async def build_suggestion_result(
     request: SuggestionRequest,
     posts: list[NormalizedLinkedInPost],
+    discovery_warning: str | None = None,
 ) -> SuggestionResult:
     """Convert live discovered posts into the public API result contract."""
     topic = request.topic.strip()
@@ -30,7 +31,10 @@ async def build_suggestion_result(
     if not ranked_records:
         raise RuntimeError("No LinkedIn posts were discovered for this request.")
 
-    generated_comments = await _generate_comments(request, ranked_records)
+    generated_comments, fallback_count = await _generate_comments(
+        request,
+        ranked_records,
+    )
     ranked_posts = [
         RankedPost(
             rank=index,
@@ -49,12 +53,20 @@ async def build_suggestion_result(
     ]
 
     keyword_summary = ", ".join(keywords)
+    is_partial = len(ranked_posts) < 3 or fallback_count > 0 or bool(discovery_warning)
+    recovery_message = _recovery_message(
+        discovery_warning=discovery_warning,
+        fallback_count=fallback_count,
+        ranked_post_count=len(ranked_posts),
+    )
+
     return SuggestionResult(
         posts=ranked_posts,
-        partial=len(ranked_posts) < 3,
+        partial=is_partial,
         request_summary=(
             f"{persona} exploring {topic} with keywords: {keyword_summary}."
         ),
+        recovery_message=recovery_message,
     )
 
 
@@ -79,17 +91,21 @@ def _build_rationale(
 async def _generate_comments(
     request: SuggestionRequest,
     posts: list[NormalizedLinkedInPost],
-) -> list[list[SuggestedComment]]:
+) -> tuple[list[list[SuggestedComment]], int]:
     try:
         generation_model = get_generation_model()
     except Exception as exc:  # pragma: no cover - defensive config fallback
         logger.warning("Falling back to deterministic comments: %s", exc)
-        return [
-            _build_fallback_comments(request, post, rank)
-            for rank, post in enumerate(posts, start=1)
-        ]
+        return (
+            [
+                _build_fallback_comments(request, post, rank)
+                for rank, post in enumerate(posts, start=1)
+            ],
+            len(posts),
+        )
 
     generated_comments: list[list[SuggestedComment]] = []
+    fallback_count = 0
     for rank, post in enumerate(posts, start=1):
         messages = _comment_messages(request, post)
 
@@ -105,8 +121,37 @@ async def _generate_comments(
                 exc,
             )
             generated_comments.append(_build_fallback_comments(request, post, rank))
+            fallback_count += 1
 
-    return generated_comments
+    return generated_comments, fallback_count
+
+
+def _recovery_message(
+    discovery_warning: str | None,
+    fallback_count: int,
+    ranked_post_count: int,
+) -> str | None:
+    notes: list[str] = []
+
+    if discovery_warning:
+        notes.append(discovery_warning)
+
+    if ranked_post_count < 3:
+        notes.append(
+            "We found fewer than three strong opportunities this run. "
+            "Try broadening keywords and rerun."
+        )
+
+    if fallback_count > 0:
+        notes.append(
+            "Some comment drafts used a backup path. "
+            "You can copy these now and rerun to refresh."
+        )
+
+    if not notes:
+        return None
+
+    return " ".join(notes)
 
 
 async def _generate_comments_for_post(

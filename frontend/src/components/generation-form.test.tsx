@@ -73,4 +73,25 @@ describe("GenerationForm", () => {
       }),
     );
   });
+
+  it("preserves entered inputs while loading state toggles", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    const { rerender } = render(
+      <GenerationForm onSubmit={onSubmit} isLoading={false} />,
+    );
+
+    await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
+    await user.selectOptions(screen.getByLabelText(/topic/i), "AI agents");
+    await user.type(screen.getByLabelText(/include-only keywords/i), "distribution");
+    await user.click(screen.getByRole("button", { name: /add keyword/i }));
+
+    rerender(<GenerationForm onSubmit={onSubmit} isLoading={true} />);
+    rerender(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
+
+    expect(screen.getByLabelText(/persona/i)).toHaveValue("Founder");
+    expect(screen.getByLabelText(/topic/i)).toHaveValue("AI agents");
+    expect(screen.getByText("distribution x")).toBeInTheDocument();
+  });
 });

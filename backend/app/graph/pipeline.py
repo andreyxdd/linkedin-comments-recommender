@@ -41,6 +41,7 @@ async def run_pipeline_stream(
         ),
     )
     discovered_posts = await adapter.discover(request)
+    discovery_warning = adapter.last_warning
 
     yield _sse(
         "status",
@@ -60,7 +61,11 @@ async def run_pipeline_stream(
             message="Generating tailored comments",
         ),
     )
-    result = await build_suggestion_result(request, ranked_posts)
+    result = await build_suggestion_result(
+        request,
+        ranked_posts,
+        discovery_warning=discovery_warning,
+    )
 
     result_event = StreamEvent(
         event_type="result",

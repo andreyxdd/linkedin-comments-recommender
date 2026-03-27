@@ -53,7 +53,9 @@ export function useGenerationStream(): UseGenerationStreamReturn {
         });
 
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          throw new Error(
+            "We couldn't complete this run. Please try again in a moment.",
+          );
         }
 
         const reader = response.body?.getReader();
@@ -94,7 +96,11 @@ export function useGenerationStream(): UseGenerationStreamReturn {
         }
       } catch (err) {
         if (err instanceof Error && err.name !== "AbortError") {
-          setError(err.message);
+          if (err.message.includes("Failed to fetch")) {
+            setError("Unable to reach the service. Check connection and retry.");
+          } else {
+            setError(err.message);
+          }
         }
       } finally {
         setIsLoading(false);

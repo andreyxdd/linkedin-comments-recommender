@@ -260,20 +260,34 @@ async def test_pipeline_emits_linkedin_milestones_and_ranked_posts(
         "https://api.apify.com/v2/acts/harvestapi~linkedin-post-reactions/run-sync-get-dataset-items"
     ).mock(return_value=Response(200, json=_reactions_fixture()))
 
-    response = await client.post(
-        "/api/generate",
-        json={
-            "persona": "Founder",
-            "topic": "AI agents",
-            "keywords": ["linkedin", "distribution"],
-            "tone": {
-                "professional_casual": 62,
-                "reserved_warm": 68,
-                "measured_bold": 71,
-                "conventional_fresh": 57,
-            },
-        },
+    generation_model = AsyncMock()
+    generation_model.ainvoke = AsyncMock(
+        side_effect=[
+            AsyncMock(content=_generated_comment_payload("Comment 1A", "Comment 1B")),
+            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B")),
+            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B")),
+        ]
     )
+
+    with patch(
+        "app.services.linkedin_suggestions.get_generation_model",
+        return_value=generation_model,
+        create=True,
+    ):
+        response = await client.post(
+            "/api/generate",
+            json={
+                "persona": "Founder",
+                "topic": "AI agents",
+                "keywords": ["linkedin", "distribution"],
+                "tone": {
+                    "professional_casual": 62,
+                    "reserved_warm": 68,
+                    "measured_bold": 71,
+                    "conventional_fresh": 57,
+                },
+            },
+        )
 
     events = _parse_sse_events(response.text)
     status_nodes = [e["data"]["node"] for e in events if e["event"] == "status"]
@@ -387,6 +401,122 @@ async def test_pipeline_returns_generated_comments_for_each_ranked_post(
     assert result["posts"][1]["suggested_comments"][1]["text"] == "Generated comment 2B"
     assert result["posts"][2]["suggested_comments"][0]["text"] == "Generated comment 3A"
     assert result["posts"][2]["suggested_comments"][1]["text"] == "Generated comment 3B"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_pipeline_returns_partial_result_when_reaction_enrichment_fails(
+    client: AsyncClient,
+    monkeypatch,
+):
+    monkeypatch.setattr(settings, "apify_api_token", "test-token")
+    monkeypatch.setattr(settings, "reaction_enrichment_count", 4)
+    monkeypatch.setattr(settings, "max_reactions_per_post", 5)
+
+    respx.post(
+        "https://api.apify.com/v2/acts/apimaestro~linkedin-posts-search-scraper-no-cookies/run-sync-get-dataset-items"
+    ).mock(return_value=Response(200, json=_posts_fixture()))
+    respx.post(
+        "https://api.apify.com/v2/acts/harvestapi~linkedin-post-reactions/run-sync-get-dataset-items"
+    ).mock(return_value=Response(503, json={"error": "upstream unavailable"}))
+
+    generation_model = AsyncMock()
+    generation_model.ainvoke = AsyncMock(
+        side_effect=[
+            AsyncMock(content=_generated_comment_payload("Comment 1A", "Comment 1B")),
+            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B")),
+            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B")),
+        ]
+    )
+
+    with patch(
+        "app.services.linkedin_suggestions.get_generation_model",
+        return_value=generation_model,
+        create=True,
+    ):
+        response = await client.post(
+            "/api/generate",
+            json={
+                "persona": "Founder",
+                "topic": "AI agents",
+                "keywords": ["linkedin", "distribution"],
+                "tone": {
+                    "professional_casual": 62,
+                    "reserved_warm": 68,
+                    "measured_bold": 71,
+                    "conventional_fresh": 57,
+                },
+            },
+        )
+
+    assert response.status_code == 200
+    result = [
+        event["data"]["data"]
+        for event in _parse_sse_events(response.text)
+        if event["event"] == "result"
+    ][0]
+
+    assert result["partial"] is True
+    assert len(result["posts"]) == 3
+    assert result["recovery_message"]
+    assert "rerun" in result["recovery_message"].lower()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_pipeline_returns_partial_result_when_comment_generation_degrades(
+    client: AsyncClient,
+    monkeypatch,
+):
+    monkeypatch.setattr(settings, "apify_api_token", "test-token")
+    monkeypatch.setattr(settings, "reaction_enrichment_count", 4)
+    monkeypatch.setattr(settings, "max_reactions_per_post", 5)
+
+    respx.post(
+        "https://api.apify.com/v2/acts/apimaestro~linkedin-posts-search-scraper-no-cookies/run-sync-get-dataset-items"
+    ).mock(return_value=Response(200, json=_posts_fixture()))
+    respx.post(
+        "https://api.apify.com/v2/acts/harvestapi~linkedin-post-reactions/run-sync-get-dataset-items"
+    ).mock(return_value=Response(200, json=_reactions_fixture()))
+
+    generation_model = AsyncMock()
+    generation_model.ainvoke = AsyncMock(
+        side_effect=[
+            RuntimeError("temporary generation hiccup"),
+            AsyncMock(content=_generated_comment_payload("Comment 2A", "Comment 2B")),
+            AsyncMock(content=_generated_comment_payload("Comment 3A", "Comment 3B")),
+        ]
+    )
+
+    with patch(
+        "app.services.linkedin_suggestions.get_generation_model",
+        return_value=generation_model,
+        create=True,
+    ):
+        response = await client.post(
+            "/api/generate",
+            json={
+                "persona": "Founder",
+                "topic": "AI agents",
+                "keywords": ["linkedin", "distribution"],
+                "tone": {
+                    "professional_casual": 62,
+                    "reserved_warm": 68,
+                    "measured_bold": 71,
+                    "conventional_fresh": 57,
+                },
+            },
+        )
+
+    result = [
+        event["data"]["data"]
+        for event in _parse_sse_events(response.text)
+        if event["event"] == "result"
+    ][0]
+
+    assert result["partial"] is True
+    assert len(result["posts"]) == 3
+    assert "backup path" in result["recovery_message"].lower()
 
 
 @pytest.mark.asyncio

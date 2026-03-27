@@ -128,3 +128,32 @@ async def test_build_suggestion_result_accepts_list_payload_from_generation_mode
 
     assert result.posts[0].suggested_comments[0].text == "List payload comment 1."
     assert result.posts[0].suggested_comments[1].text == "List payload comment 2."
+
+
+@pytest.mark.asyncio
+async def test_build_suggestion_result_marks_partial_for_discovery_warning():
+    generation_model = AsyncMock()
+    generation_model.ainvoke = AsyncMock(
+        side_effect=[
+            AsyncMock(content='{"comments":["Comment 1A.","Comment 1B."]}'),
+            AsyncMock(content='{"comments":["Comment 2A.","Comment 2B."]}'),
+            AsyncMock(content='{"comments":["Comment 3A.","Comment 3B."]}'),
+        ]
+    )
+
+    with patch(
+        "app.services.linkedin_suggestions.get_generation_model",
+        return_value=generation_model,
+    ):
+        result = await build_suggestion_result(
+            _request(),
+            _posts(),
+            discovery_warning=(
+                "Some engagement signals were unavailable. "
+                "You can still use these ranked posts and rerun for a fuller result."
+            ),
+        )
+
+    assert result.partial is True
+    assert result.recovery_message
+    assert "rerun" in result.recovery_message.lower()

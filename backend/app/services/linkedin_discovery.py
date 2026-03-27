@@ -13,10 +13,12 @@ class ApifyLinkedInDiscoveryAdapter:
 
     def __init__(self, client: httpx.AsyncClient | None = None):
         self._client = client
+        self.last_warning: str | None = None
 
     async def discover(
         self, request: SuggestionRequest
     ) -> list[NormalizedLinkedInPost]:
+        self.last_warning = None
         if not settings.apify_api_token:
             raise RuntimeError(
                 "APIFY_API_TOKEN is required for live LinkedIn discovery."
@@ -102,15 +104,22 @@ class ApifyLinkedInDiscoveryAdapter:
             return []
 
         posts_to_enrich = posts[: settings.reaction_enrichment_count]
-        raw_reactions = await self._run_actor(
-            client,
-            actor_id=settings.apify_reactions_actor_id,
-            payload={
-                "posts": [post.post_url for post in posts_to_enrich],
-                "maxItems": settings.max_reactions_per_post,
-                "profileScraperMode": "short",
-            },
-        )
+        try:
+            raw_reactions = await self._run_actor(
+                client,
+                actor_id=settings.apify_reactions_actor_id,
+                payload={
+                    "posts": [post.post_url for post in posts_to_enrich],
+                    "maxItems": settings.max_reactions_per_post,
+                    "profileScraperMode": "short",
+                },
+            )
+        except httpx.HTTPError:
+            self.last_warning = (
+                "Some engagement signals were unavailable. You can still use these "
+                "ranked posts and rerun for a fuller result."
+            )
+            return posts
         return _attach_reactions(posts, raw_reactions)
 
     async def _run_actor(

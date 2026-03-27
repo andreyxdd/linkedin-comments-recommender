@@ -27,6 +27,12 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
         </span>
       </div>
 
+      {result.partial && result.recovery_message && (
+        <div className="rounded-xl border border-amber-300/50 bg-amber-100/40 p-4 text-sm text-amber-950">
+          {result.recovery_message}
+        </div>
+      )}
+
       {result.posts.map((post) => (
         <Card
           key={post.post_url}

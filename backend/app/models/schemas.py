@@ -105,6 +105,7 @@ class SuggestionResult(BaseModel):
     posts: list[RankedPost] = Field(..., min_length=1, max_length=3)
     partial: bool = False
     request_summary: str
+    recovery_message: str | None = None
 
 
 class DataItem(BaseModel):

@@ -37,6 +37,7 @@ export interface SuggestionResult {
   posts: RankedPost[];
   partial: boolean;
   request_summary: string;
+  recovery_message: string | null;
 }
 
 export interface StreamEvent {
