@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,15 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
   >({});
   const [copiedCommentId, setCopiedCommentId] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!copyFeedback) return;
+    const timer = window.setTimeout(() => {
+      setCopyFeedback(null);
+      setCopiedCommentId(null);
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [copyFeedback]);
 
   if (!result) return null;
 
@@ -77,13 +86,19 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
 
       {result.posts.map((post) => {
         const isExpanded = expandedPostUrl === post.post_url;
-        const isLongText = post.full_text.length > FULL_TEXT_PREVIEW_CHAR_LIMIT;
+        const fullTextSource = post.full_text.trimStart();
+        const trimmedPreview = post.preview.trim();
+        const dedupedCandidate = fullTextSource.startsWith(trimmedPreview)
+          ? fullTextSource.slice(trimmedPreview.length).trimStart()
+          : post.full_text;
+        const dedupedFullText = dedupedCandidate.length > 0 ? dedupedCandidate : post.full_text;
+        const isLongText = dedupedFullText.length > FULL_TEXT_PREVIEW_CHAR_LIMIT;
         const hasRevealedRest = Boolean(revealedRestByPost[post.post_url]);
         const fullTextPreview = isLongText
-          ? `${post.full_text.slice(0, FULL_TEXT_PREVIEW_CHAR_LIMIT).trimEnd()}...`
-          : post.full_text;
+          ? `${dedupedFullText.slice(0, FULL_TEXT_PREVIEW_CHAR_LIMIT).trimEnd()}...`
+          : dedupedFullText;
         const displayedFullText =
-          isLongText && !hasRevealedRest ? fullTextPreview : post.full_text;
+          isLongText && !hasRevealedRest ? fullTextPreview : dedupedFullText;
 
         return (
           <Card
@@ -93,8 +108,15 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
             <CardHeader>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge>Rank #{post.rank}</Badge>
-                <Badge variant="outline">{post.engagement.reactions} reactions</Badge>
-                <Badge variant="outline">{post.engagement.comments} comments</Badge>
+                <Badge variant="outline" className="border-sky-300/70 bg-sky-100/80 text-sky-900">
+                  {post.engagement.reactions} reactions
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="border-emerald-300/70 bg-emerald-100/80 text-emerald-900"
+                >
+                  {post.engagement.comments} comments
+                </Badge>
               </div>
               <CardTitle className="text-xl">{post.author}</CardTitle>
               <CardDescription>{post.author_headline}</CardDescription>
@@ -119,7 +141,7 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                     aria-controls={`full-post-${post.rank}`}
                     onClick={() => togglePostExpansion(post.post_url)}
                   >
-                    {isExpanded ? "Hide full post" : "Show full post"}
+                    {isExpanded ? "Hide full post" : "Show more"}
                   </Button>
                   <a
                     href={post.post_url}
@@ -138,7 +160,7 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                   className="rounded-xl border border-border/70 bg-muted/20 p-4"
                 >
                   <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                    Full post
+                    Full post continuation
                   </div>
                   <p className="mt-2 text-sm leading-6 text-foreground/90">
                     {displayedFullText}
@@ -152,7 +174,7 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                       aria-label={`Show rest of full text for ${post.author}`}
                       onClick={() => revealRest(post.post_url)}
                     >
-                      Show rest
+                      See more
                     </Button>
                   )}
                 </div>
@@ -167,11 +189,14 @@ export function ResultDisplay({ result }: ResultDisplayProps) {
                 </p>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
+              <div
+                data-testid="comment-options-row"
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible md:pb-0"
+              >
                 {post.suggested_comments.map((comment, index) => (
                   <div
                     key={comment.id}
-                    className="rounded-xl border border-border/70 p-4"
+                    className="min-w-[84%] snap-start rounded-xl border border-border/70 p-4 md:min-w-0"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">

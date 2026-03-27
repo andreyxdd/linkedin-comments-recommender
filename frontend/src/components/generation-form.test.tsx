@@ -13,7 +13,7 @@ describe("GenerationForm", () => {
     render(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
 
     const submitButton = screen.getByRole("button", {
-      name: /find opportunities/i,
+      name: /find posts to comment on/i,
     });
     expect(submitButton).toBeDisabled();
 
@@ -59,7 +59,7 @@ describe("GenerationForm", () => {
     });
 
     await user.click(
-      screen.getByRole("button", { name: /find opportunities/i }),
+      screen.getByRole("button", { name: /find posts to comment on/i }),
     );
 
     expect(onSubmit).toHaveBeenCalledWith(
@@ -93,5 +93,34 @@ describe("GenerationForm", () => {
     expect(screen.getByLabelText(/persona/i)).toHaveValue("Founder");
     expect(screen.getByLabelText(/topic/i)).toHaveValue("AI agents");
     expect(screen.getByText("distribution x")).toBeInTheDocument();
+  });
+
+  it("shows persona-specific helper guidance after selection", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
+
+    expect(
+      screen.getByText("Helps tailor comment voice and examples to your role."),
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/persona/i), "Founder");
+
+    expect(
+      screen.getByText(/Founder mode: focuses on product, traction, and POV-based comments\./i),
+    ).toBeInTheDocument();
+  });
+
+  it("applies tone presets for faster setup", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(<GenerationForm onSubmit={onSubmit} isLoading={false} />);
+
+    await user.click(screen.getByRole("button", { name: "Warm" }));
+
+    expect(screen.getByLabelText(/reserved <-> warm/i)).toHaveValue("76");
+    expect(screen.getByText("Leaning Warm")).toBeInTheDocument();
   });
 });

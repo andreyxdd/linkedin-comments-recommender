@@ -77,5 +77,8 @@ describe("StreamDisplay", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Suggestions ready.")).not.toBeInTheDocument();
     expect(screen.getAllByText("Done")).toHaveLength(3);
+    expect(
+      screen.getByText("Prepare three ready comments for each top post."),
+    ).toBeInTheDocument();
   });
 });

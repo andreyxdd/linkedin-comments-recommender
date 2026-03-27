@@ -18,15 +18,15 @@ interface StreamDisplayProps {
 const milestones = [
   {
     title: "Find relevant posts",
-    detail: "Scan public LinkedIn conversations worth attention.",
+    detail: "Scan public LinkedIn posts that match your angle.",
   },
   {
     title: "Rank the shortlist",
-    detail: "Score the strongest matches before drafting comments.",
+    detail: "Score the strongest post matches before drafting comments.",
   },
   {
     title: "Draft comments",
-    detail: "Prepare two ready replies for each top opportunity.",
+    detail: "Prepare three ready comments for each top post.",
   },
 ] as const;
 

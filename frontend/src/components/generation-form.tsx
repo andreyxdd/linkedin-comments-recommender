@@ -34,12 +34,47 @@ const TOPIC_OPTIONS = [
   "Custom",
 ] as const;
 
+const PERSONA_GUIDANCE: Record<string, string> = {
+  default: "Helps tailor comment voice and examples to your role.",
+  founder: "Founder mode: focuses on product, traction, and POV-based comments.",
+  consultant:
+    "Consultant mode: emphasizes frameworks, diagnosis, and practical recommendations.",
+  operator:
+    "Operator mode: prioritizes execution detail, process, and measurable outcomes.",
+  "job seeker":
+    "Job seeker mode: highlights learning mindset, curiosity, and relevant experience.",
+  custom:
+    "Custom mode: define your own role framing for more precise comment direction.",
+};
+
 const DEFAULT_TONE: ToneProfile = {
   professional_casual: 50,
   reserved_warm: 50,
   measured_bold: 50,
   conventional_fresh: 50,
 };
+
+const TONE_PRESETS: Array<{ label: string; values: ToneProfile }> = [
+  { label: "Balanced", values: DEFAULT_TONE },
+  {
+    label: "Warm",
+    values: {
+      professional_casual: 62,
+      reserved_warm: 76,
+      measured_bold: 52,
+      conventional_fresh: 56,
+    },
+  },
+  {
+    label: "Bold",
+    values: {
+      professional_casual: 57,
+      reserved_warm: 58,
+      measured_bold: 82,
+      conventional_fresh: 70,
+    },
+  },
+];
 
 const TONE_FIELDS: Array<{
   key: keyof ToneProfile;
@@ -102,6 +137,8 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
     resolvedTopic.length > 0 &&
     keywords.length > 0;
 
+  const activePersonaGuidance = PERSONA_GUIDANCE[persona.toLowerCase()] ?? PERSONA_GUIDANCE.default;
+
   const addKeyword = () => {
     const cleaned = keywordInput.trim();
     if (!cleaned) return;
@@ -137,8 +174,8 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
         </div>
         <CardTitle className="text-2xl">Set your LinkedIn angle</CardTitle>
         <CardDescription>
-          Pick your persona, topic, keywords, and tone. Custom values stay in
-          this session.
+          Choose who you are, what discussions to join, and how your comments
+          should sound.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -148,6 +185,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
               <label htmlFor="persona" className="text-sm font-medium">
                 Persona
               </label>
+              <p className="text-xs text-muted-foreground">{activePersonaGuidance}</p>
               <select
                 id="persona"
                 value={persona.toLowerCase() === "custom" ? "custom" : persona}
@@ -165,12 +203,29 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
                   </option>
                 ))}
               </select>
+              {persona === "custom" && (
+                <div className="space-y-1">
+                  <label htmlFor="custom-persona" className="text-xs text-muted-foreground">
+                    Custom persona
+                  </label>
+                  <Input
+                    id="custom-persona"
+                    placeholder="e.g., Community-led founder"
+                    value={customPersona}
+                    onChange={(e) => setCustomPersona(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <label htmlFor="topic" className="text-sm font-medium">
                 Topic
               </label>
+              <p className="text-xs text-muted-foreground">
+                Defines which LinkedIn conversation lane we prioritize.
+              </p>
               <select
                 id="topic"
                 value={topic.toLowerCase() === "custom" ? "custom" : topic}
@@ -188,47 +243,34 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
                   </option>
                 ))}
               </select>
+              {topic === "custom" && (
+                <div className="space-y-1">
+                  <label htmlFor="custom-topic" className="text-xs text-muted-foreground">
+                    Custom topic
+                  </label>
+                  <Input
+                    id="custom-topic"
+                    placeholder="e.g., AI pricing strategy for B2B SaaS"
+                    value={customTopic}
+                    onChange={(e) => setCustomTopic(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
             </div>
           </div>
-
-          {persona === "custom" && (
-            <div className="space-y-2">
-              <label htmlFor="custom-persona" className="text-sm font-medium">
-                Custom persona
-              </label>
-              <Input
-                id="custom-persona"
-                placeholder="e.g., Community-led founder"
-                value={customPersona}
-                onChange={(e) => setCustomPersona(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          )}
-
-          {topic === "custom" && (
-            <div className="space-y-2">
-              <label htmlFor="custom-topic" className="text-sm font-medium">
-                Custom topic
-              </label>
-              <Input
-                id="custom-topic"
-                placeholder="e.g., Creator partnerships"
-                value={customTopic}
-                onChange={(e) => setCustomTopic(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          )}
 
           <div className="space-y-3">
             <label htmlFor="keyword-input" className="text-sm font-medium">
               Keywords (include only)
             </label>
+            <p className="text-xs text-muted-foreground">
+              Add must-match words or short phrases to keep discovery focused.
+            </p>
             <div className="flex gap-2">
               <Input
                 id="keyword-input"
-                placeholder="Add one phrase at a time"
+                placeholder="e.g., product-market fit"
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -257,6 +299,30 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
             </div>
             <p className="text-xs text-muted-foreground">
               Keep keywords specific so discovery stays focused.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-medium">Tone controls</div>
+              <div className="flex flex-wrap gap-2">
+                {TONE_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => setTone(preset.values)}
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Each slider balances two writing styles. Start with a preset, then
+              fine-tune.
             </p>
           </div>
 
@@ -289,7 +355,13 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                   <span>{field.leftLabel}</span>
-                  <span>{tone[field.key]}</span>
+                  <span>
+                    {tone[field.key] < 35
+                      ? `Leaning ${field.leftLabel}`
+                      : tone[field.key] > 65
+                        ? `Leaning ${field.rightLabel}`
+                        : "Balanced"}
+                  </span>
                   <span>{field.rightLabel}</span>
                 </div>
               </div>
@@ -297,7 +369,7 @@ export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
           </div>
 
           <Button type="submit" className="h-11 w-full" disabled={!canSubmit}>
-            {isLoading ? "Preparing..." : "Find Opportunities"}
+            {isLoading ? "Preparing..." : "Find posts to comment on"}
           </Button>
         </form>
       </CardContent>

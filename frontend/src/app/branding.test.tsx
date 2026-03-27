@@ -35,12 +35,12 @@ describe("UI branding", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "Find public LinkedIn posts worth engaging with and get three ready replies per post.",
+        name: "Find public LinkedIn posts to comment on and get three ready comment drafts per post.",
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Set your angle, watch progress, and review three ranked opportunities without dashboard noise.",
+        "Tell us who you are, what conversations to join, and your tone. We rank matching posts and draft comments you can copy fast.",
       ),
     ).toBeInTheDocument();
   });

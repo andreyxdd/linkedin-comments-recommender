@@ -19,12 +19,12 @@ export default function Home() {
               LinkedIn Comments Adviser
             </div>
             <h1 className="max-w-4xl text-5xl leading-tight font-medium tracking-tight text-foreground md:text-6xl">
-              Find public LinkedIn posts worth engaging with and get three ready
-              replies per post.
+              Find public LinkedIn posts to comment on and get three ready
+              comment drafts per post.
             </h1>
             <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-              Set your angle, watch progress, and review three ranked
-              opportunities without dashboard noise.
+              Tell us who you are, what conversations to join, and your tone. We
+              rank matching posts and draft comments you can copy fast.
             </p>
           </div>
 
@@ -68,10 +68,10 @@ export default function Home() {
             <div className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">
               Step 3
             </div>
-            <h2 className="text-3xl font-medium">Review ranked opportunities</h2>
+            <h2 className="text-3xl font-medium">Review ranked posts to comment on</h2>
             <p className="text-sm text-muted-foreground">
-              Results stay in card form so you can scan the ranking logic and copy
-              a draft without parsing raw payloads.
+              Each card shows why the post was selected and gives you three
+              comment drafts you can copy in one click.
             </p>
           </div>
 

@@ -83,7 +83,7 @@ Each post card should show:
 - direct post URL
 - visible engagement signals used in ranking
 - a brief rationale for why the post was selected
-- two copyable comment suggestions
+- three copyable comment suggestions
 
 ## Backend Responsibilities
 The backend remains the source of truth for discovery, ranking, generation, and graceful degradation.

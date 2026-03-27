@@ -1,6 +1,6 @@
 "use client";
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
@@ -60,6 +60,13 @@ describe("ResultDisplay", () => {
     ).toHaveLength(2);
   });
 
+  it("uses distinct engagement labels for reactions and comments", () => {
+    render(<ResultDisplay result={sampleResult} />);
+
+    expect(screen.getByText("24 reactions")).toHaveClass("bg-sky-100/80");
+    expect(screen.getByText("7 comments")).toHaveClass("bg-emerald-100/80");
+  });
+
   it("keeps cards collapsed, then reveals and bounds full text with single-open behavior", async () => {
     const user = userEvent.setup();
     render(<ResultDisplay result={sampleResult} />);
@@ -107,5 +114,19 @@ describe("ResultDisplay", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Comment copied to clipboard.",
     );
+
+    await waitFor(
+      () => expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+  });
+
+  it("renders comment options in a horizontally scrollable row", () => {
+    render(<ResultDisplay result={sampleResult} />);
+
+    const firstRow = screen
+      .getAllByText("Option 1")[0]
+      .closest('[data-testid="comment-options-row"]');
+    expect(firstRow).toHaveClass("overflow-x-auto");
   });
 });
