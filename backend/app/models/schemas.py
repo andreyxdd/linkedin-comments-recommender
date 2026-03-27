@@ -19,22 +19,63 @@ class DifficultyLevel(StrEnum):
     ADVANCED = "advanced"
 
 
-class GenerationRequest(BaseModel):
-    """User input to the agentic loop. Customize fields for your domain."""
+class ToneProfile(BaseModel):
+    """User-controlled voice settings for suggested LinkedIn comments."""
 
-    topic: str = Field(..., description="The subject or keywords to process")
-    context: str = Field(
-        default="general",
-        description="Domain or field context (e.g., 'data science', 'history')",
+    professional_casual: int = Field(..., ge=0, le=100)
+    reserved_warm: int = Field(..., ge=0, le=100)
+    measured_bold: int = Field(..., ge=0, le=100)
+    conventional_fresh: int = Field(..., ge=0, le=100)
+
+
+class SuggestionRequest(BaseModel):
+    """Structured request contract for the LinkedIn suggestion flow."""
+
+    persona: str = Field(..., min_length=1, description="Who the user is on LinkedIn")
+    topic: str = Field(
+        ..., min_length=1, description="Primary niche or conversation area"
     )
-    output_format: OutputFormat = Field(
-        default=OutputFormat.SUMMARY,
-        description="Desired output format",
+    keywords: list[str] = Field(
+        ...,
+        min_length=1,
+        description="Include-only keywords that steer post discovery",
     )
-    difficulty: DifficultyLevel = Field(
-        default=DifficultyLevel.INTERMEDIATE,
-        description="Target difficulty level",
-    )
+    tone: ToneProfile
+
+
+class PostEngagement(BaseModel):
+    """Engagement context surfaced alongside a ranked suggestion."""
+
+    reactions: int = Field(..., ge=0)
+    comments: int = Field(..., ge=0)
+
+
+class SuggestedComment(BaseModel):
+    """A single copy-ready comment suggestion."""
+
+    id: str
+    text: str
+
+
+class RankedPost(BaseModel):
+    """A ranked public post suggestion for the user to engage with."""
+
+    rank: int = Field(..., ge=1)
+    author: str
+    author_headline: str
+    post_url: str
+    preview: str
+    rationale: str
+    engagement: PostEngagement
+    suggested_comments: list[SuggestedComment] = Field(..., min_length=2, max_length=2)
+
+
+class SuggestionResult(BaseModel):
+    """Final result contract returned by the mocked LinkedIn flow."""
+
+    posts: list[RankedPost] = Field(..., min_length=1, max_length=3)
+    partial: bool = False
+    request_summary: str
 
 
 class DataItem(BaseModel):
@@ -69,6 +110,10 @@ class GenerationResult(BaseModel):
     drafts: list[DraftOutput]
     iterations: int
     sources_used: int
+
+
+# Backwards-compatible aliases while the codebase transitions away from the template.
+GenerationRequest = SuggestionRequest
 
 
 class StreamEvent(BaseModel):

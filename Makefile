@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend build test lint clean setup
+.PHONY: dev dev-backend dev-frontend build test test-backend test-frontend lint clean setup
 
 # --- Setup ---
 setup: ## First-time setup: install dependencies
@@ -24,9 +24,13 @@ build: ## Build Docker images
 # --- Test ---
 test: ## Run all tests
 	cd backend && uv run pytest -v
+	cd frontend && pnpm test
 
 test-backend: ## Run backend tests
 	cd backend && uv run pytest -v
+
+test-frontend: ## Run frontend tests
+	cd frontend && pnpm test
 
 # --- Lint ---
 lint: ## Run linters

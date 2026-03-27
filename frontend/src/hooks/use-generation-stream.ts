@@ -4,23 +4,23 @@ import { useCallback, useRef, useState } from "react";
 
 import { getApiUrl } from "@/lib/api";
 import type {
-  GenerationRequest,
-  GenerationResult,
+  SuggestionRequest,
+  SuggestionResult,
   StreamEvent,
 } from "@/lib/types";
 
 interface UseGenerationStreamReturn {
   events: StreamEvent[];
-  result: GenerationResult | null;
+  result: SuggestionResult | null;
   isLoading: boolean;
   error: string | null;
-  generate: (request: GenerationRequest) => void;
+  generate: (request: SuggestionRequest) => void;
   reset: () => void;
 }
 
 export function useGenerationStream(): UseGenerationStreamReturn {
   const [events, setEvents] = useState<StreamEvent[]>([]);
-  const [result, setResult] = useState<GenerationResult | null>(null);
+  const [result, setResult] = useState<SuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -33,7 +33,7 @@ export function useGenerationStream(): UseGenerationStreamReturn {
     setError(null);
   }, []);
 
-  const generate = useCallback((request: GenerationRequest) => {
+  const generate = useCallback((request: SuggestionRequest) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -84,7 +84,7 @@ export function useGenerationStream(): UseGenerationStreamReturn {
                   currentEventType === "result" ||
                   parsed.event_type === "result"
                 ) {
-                  setResult(parsed.data as unknown as GenerationResult);
+                  setResult(parsed.data as unknown as SuggestionResult);
                 }
               } catch {
                 // Skip malformed JSON

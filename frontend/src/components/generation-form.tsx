@@ -1,118 +1,306 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type {
-  DifficultyLevel,
-  GenerationRequest,
-  OutputFormat,
-} from "@/lib/types";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import type { SuggestionRequest, ToneProfile } from "@/lib/types";
 
 interface GenerationFormProps {
-  onSubmit: (request: GenerationRequest) => void;
+  onSubmit: (request: SuggestionRequest) => void;
   isLoading: boolean;
 }
 
+const PERSONA_OPTIONS = [
+  "Founder",
+  "Consultant",
+  "Operator",
+  "Job seeker",
+  "Custom",
+] as const;
+
+const TOPIC_OPTIONS = [
+  "AI agents",
+  "B2B SaaS growth",
+  "Creator partnerships",
+  "Product strategy",
+  "Custom",
+] as const;
+
+const DEFAULT_TONE: ToneProfile = {
+  professional_casual: 50,
+  reserved_warm: 50,
+  measured_bold: 50,
+  conventional_fresh: 50,
+};
+
+const TONE_FIELDS: Array<{
+  key: keyof ToneProfile;
+  label: string;
+  leftLabel: string;
+  rightLabel: string;
+}> = [
+  {
+    key: "professional_casual",
+    label: "Professional <-> Casual",
+    leftLabel: "Professional",
+    rightLabel: "Casual",
+  },
+  {
+    key: "reserved_warm",
+    label: "Reserved <-> Warm",
+    leftLabel: "Reserved",
+    rightLabel: "Warm",
+  },
+  {
+    key: "measured_bold",
+    label: "Measured <-> Bold",
+    leftLabel: "Measured",
+    rightLabel: "Bold",
+  },
+  {
+    key: "conventional_fresh",
+    label: "Conventional <-> Fresh",
+    leftLabel: "Conventional",
+    rightLabel: "Fresh",
+  },
+];
+
 export function GenerationForm({ onSubmit, isLoading }: GenerationFormProps) {
+  const [persona, setPersona] = useState("");
+  const [customPersona, setCustomPersona] = useState("");
   const [topic, setTopic] = useState("");
-  const [context, setContext] = useState("");
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>("summary");
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>("intermediate");
+  const [customTopic, setCustomTopic] = useState("");
+  const [keywordInput, setKeywordInput] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [tone, setTone] = useState<ToneProfile>(DEFAULT_TONE);
+
+  const resolvedPersona = useMemo(() => {
+    if (persona.toLowerCase() === "custom") {
+      return customPersona.trim();
+    }
+    return persona.trim();
+  }, [customPersona, persona]);
+
+  const resolvedTopic = useMemo(() => {
+    if (topic.toLowerCase() === "custom") {
+      return customTopic.trim();
+    }
+    return topic.trim();
+  }, [customTopic, topic]);
+
+  const canSubmit =
+    !isLoading &&
+    resolvedPersona.length > 0 &&
+    resolvedTopic.length > 0 &&
+    keywords.length > 0;
+
+  const addKeyword = () => {
+    const cleaned = keywordInput.trim();
+    if (!cleaned) return;
+    if (keywords.includes(cleaned)) {
+      setKeywordInput("");
+      return;
+    }
+    setKeywords((current) => [...current, cleaned]);
+    setKeywordInput("");
+  };
+
+  const removeKeyword = (keyword: string) => {
+    setKeywords((current) => current.filter((item) => item !== keyword));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic.trim()) return;
+    if (!canSubmit) return;
+
     onSubmit({
-      topic: topic.trim(),
-      context: context.trim() || "general",
-      output_format: outputFormat,
-      difficulty,
+      persona: resolvedPersona,
+      topic: resolvedTopic,
+      keywords,
+      tone,
     });
   };
 
   return (
-    <Card>
+    <Card className="border border-border/70 bg-card/90 backdrop-blur">
       <CardHeader>
-        <CardTitle>Generate Content</CardTitle>
+        <div className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">
+          Step 1
+        </div>
+        <CardTitle className="text-2xl">Shape your LinkedIn angle</CardTitle>
+        <CardDescription>
+          Pick who you are, which conversations matter, and how the comments
+          should sound. Custom overrides stay local to this session.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="topic" className="text-sm font-medium">
-              Topic
-            </label>
-            <Input
-              id="topic"
-              placeholder="e.g., Photosynthesis, Machine Learning, Roman Empire"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="context" className="text-sm font-medium">
-              Context / Field
-            </label>
-            <Input
-              id="context"
-              placeholder="e.g., biology, computer science, history (optional)"
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Output Format</label>
-              <Select
-                value={outputFormat}
-                onValueChange={(v) => setOutputFormat(v as OutputFormat)}
+              <label htmlFor="persona" className="text-sm font-medium">
+                Persona
+              </label>
+              <select
+                id="persona"
+                value={persona.toLowerCase() === "custom" ? "custom" : persona}
+                onChange={(e) => setPersona(e.target.value)}
                 disabled={isLoading}
+                className="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="summary">Summary</SelectItem>
-                  <SelectItem value="flashcards">Flashcards</SelectItem>
-                  <SelectItem value="quiz">Quiz</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="">Choose the closest fit</option>
+                {PERSONA_OPTIONS.map((option) => (
+                  <option
+                    key={option}
+                    value={option === "Custom" ? "custom" : option}
+                  >
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Difficulty</label>
-              <Select
-                value={difficulty}
-                onValueChange={(v) => setDifficulty(v as DifficultyLevel)}
+              <label htmlFor="topic" className="text-sm font-medium">
+                Topic
+              </label>
+              <select
+                id="topic"
+                value={topic.toLowerCase() === "custom" ? "custom" : topic}
+                onChange={(e) => setTopic(e.target.value)}
                 disabled={isLoading}
+                className="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="">Choose a conversation lane</option>
+                {TOPIC_OPTIONS.map((option) => (
+                  <option
+                    key={option}
+                    value={option === "Custom" ? "custom" : option}
+                  >
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading || !topic.trim()}>
-            {isLoading ? "Generating..." : "Generate"}
+          {persona === "custom" && (
+            <div className="space-y-2">
+              <label htmlFor="custom-persona" className="text-sm font-medium">
+                Custom persona
+              </label>
+              <Input
+                id="custom-persona"
+                placeholder="e.g., Community-led founder"
+                value={customPersona}
+                onChange={(e) => setCustomPersona(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
+          {topic === "custom" && (
+            <div className="space-y-2">
+              <label htmlFor="custom-topic" className="text-sm font-medium">
+                Custom topic
+              </label>
+              <Input
+                id="custom-topic"
+                placeholder="e.g., Creator partnerships"
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <label htmlFor="keyword-input" className="text-sm font-medium">
+              Include-only keywords
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="keyword-input"
+                placeholder="Add one phrase at a time"
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addKeyword();
+                  }
+                }}
+                disabled={isLoading}
+              />
+              <Button type="button" variant="outline" onClick={addKeyword} disabled={isLoading}>
+                Add keyword
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {keywords.map((keyword) => (
+                <button
+                  key={keyword}
+                  type="button"
+                  onClick={() => removeKeyword(keyword)}
+                  className="rounded-full border border-border px-3 py-1 text-sm text-muted-foreground transition hover:border-foreground hover:text-foreground"
+                >
+                  {keyword} x
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Include-only keywords keep the discovery focused instead of turning
+              into a vague prompt soup.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {TONE_FIELDS.map((field) => (
+              <div key={field.key} className="rounded-xl border border-border/70 p-4">
+                <div className="space-y-2">
+                  <label
+                    htmlFor={field.key}
+                    className="text-sm font-medium"
+                  >
+                    {field.label}
+                  </label>
+                  <input
+                    id={field.key}
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={tone[field.key]}
+                    onChange={(e) =>
+                      setTone((current) => ({
+                        ...current,
+                        [field.key]: Number(e.target.value),
+                      }))
+                    }
+                    disabled={isLoading}
+                    className="w-full accent-foreground"
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{field.leftLabel}</span>
+                  <span>{tone[field.key]}</span>
+                  <span>{field.rightLabel}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button type="submit" className="h-11 w-full" disabled={!canSubmit}>
+            {isLoading
+              ? "Preparing suggestions..."
+              : "Find Ranked LinkedIn Opportunities"}
           </Button>
         </form>
       </CardContent>

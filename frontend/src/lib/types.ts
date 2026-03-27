@@ -1,34 +1,46 @@
-export type OutputFormat = "summary" | "flashcards" | "quiz";
-export type DifficultyLevel = "beginner" | "intermediate" | "advanced";
+export interface ToneProfile {
+  professional_casual: number;
+  reserved_warm: number;
+  measured_bold: number;
+  conventional_fresh: number;
+}
 
-export interface GenerationRequest {
+export interface SuggestionRequest {
+  persona: string;
   topic: string;
-  context: string;
-  output_format: OutputFormat;
-  difficulty: DifficultyLevel;
+  keywords: string[];
+  tone: ToneProfile;
 }
 
-export interface DraftEvaluation {
-  accuracy_score: number;
-  completeness_score: number;
-  clarity_score: number;
-  passed: boolean;
-  reasoning: string;
+export interface PostEngagement {
+  reactions: number;
+  comments: number;
 }
 
-export interface DraftOutput {
-  content: string;
-  evaluation: DraftEvaluation | null;
+export interface SuggestedComment {
+  id: string;
+  text: string;
 }
 
-export interface GenerationResult {
-  drafts: DraftOutput[];
-  iterations: number;
-  sources_used: number;
+export interface RankedPost {
+  rank: number;
+  author: string;
+  author_headline: string;
+  post_url: string;
+  preview: string;
+  rationale: string;
+  engagement: PostEngagement;
+  suggested_comments: SuggestedComment[];
+}
+
+export interface SuggestionResult {
+  posts: RankedPost[];
+  partial: boolean;
+  request_summary: string;
 }
 
 export interface StreamEvent {
-  event_type: "status" | "evaluation" | "result";
+  event_type: "status" | "result";
   node: string;
   message: string;
   data: Record<string, unknown>;

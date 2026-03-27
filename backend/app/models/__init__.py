@@ -4,7 +4,13 @@ from app.models.schemas import (
     DraftOutput,
     GenerationRequest,
     GenerationResult,
+    PostEngagement,
+    RankedPost,
     StreamEvent,
+    SuggestedComment,
+    SuggestionRequest,
+    SuggestionResult,
+    ToneProfile,
 )
 
 __all__ = [
@@ -13,5 +19,11 @@ __all__ = [
     "DraftOutput",
     "GenerationRequest",
     "GenerationResult",
+    "PostEngagement",
+    "RankedPost",
+    "SuggestedComment",
+    "SuggestionRequest",
+    "SuggestionResult",
     "StreamEvent",
+    "ToneProfile",
 ]
