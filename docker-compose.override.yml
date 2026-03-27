@@ -1,0 +1,24 @@
+# Dev overrides — automatically merged with docker-compose.yml
+# Usage: docker compose up (no -f flag needed)
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=true
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    command: pnpm dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000

@@ -1,0 +1,4 @@
+{
+  "test_cmd": "make test",
+  "build_cmd": "make build"
+}
