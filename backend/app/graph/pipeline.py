@@ -60,7 +60,7 @@ async def run_pipeline_stream(
             message="Generating tailored comments",
         ),
     )
-    result = build_suggestion_result(request, ranked_posts)
+    result = await build_suggestion_result(request, ranked_posts)
 
     result_event = StreamEvent(
         event_type="result",
